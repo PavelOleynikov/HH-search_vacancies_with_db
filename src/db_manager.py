@@ -1,6 +1,8 @@
+from typing import List, Tuple, Optional
+
 import psycopg2
-from typing import List, Tuple
-from config import host, user, password, dbname
+
+from config import dbname, host, password, user
 
 
 class DBManager:
@@ -8,15 +10,15 @@ class DBManager:
 
     def __init__(
         self,
-        dbname: str = dbname,
-        user: str = user,
-        password: str = password,
-        host: str = host,
+        dbname: str | None = dbname,
+        user: str | None = user,
+        password: str | None = password,
+        host: str | None = host,
     ) -> None:
         self.conn = psycopg2.connect(dbname=dbname, user=user, password=password, host=host)
         self.cur = self.conn.cursor()
 
-    def get_companies_and_vacancies_count(self) -> List[Tuple[str, int]]:
+    def get_companies_and_vacancies_count(self) -> List[Tuple[str, str, Optional[float], str]]:
         """Метод для получения списка всех компаний и количества вакансий у каждой компании"""
 
         query = """
@@ -29,7 +31,7 @@ class DBManager:
         self.cur.execute(query)
         return self.cur.fetchall()
 
-    def get_all_vacancies(self) -> List[Tuple[str, str, float, str]]:
+    def get_all_vacancies(self) -> List[Tuple[str, str, Optional[float], str]]:
         """
         Метод для получения списка всех вакансий с указанием названия компании,
         названия вакансии и зарплаты и ссылки на вакансию
@@ -43,11 +45,12 @@ class DBManager:
         self.cur.execute(query)
         return self.cur.fetchall()
 
-    def get_avg_salary(self) -> float:
+    def get_avg_salary(self) -> Tuple[str, str, Optional[float], str] | None:
         """Метод для получения средней зарплаты по вакансиям"""
 
         # берет первое not null значение из salary_from и salary_to
-        query = """SELECT AVG(COALESCE(salary_from, salary_to)) AS avg_salary 
+        query = """
+        SELECT AVG(COALESCE(salary_from, salary_to)) AS avg_salary 
         FROM vacancies;
         """
         self.cur.execute(query)
@@ -55,7 +58,7 @@ class DBManager:
 
     def get_vacancies_with_higher_salary(
         self,
-    ) -> List[Tuple[str, str, float, str]]:
+    ) -> List[Tuple[str, str, Optional[float], str]]:
         """
         Метод для получения списка всех вакансий,
         у которых зарплата выше средней по всем вакансиям
@@ -73,7 +76,7 @@ class DBManager:
         self.cur.execute(query, (avg_salary,))
         return self.cur.fetchall()
 
-    def get_vacancies_with_keyword(self, keyword: str) -> List[Tuple[str, str, float, str]]:
+    def get_vacancies_with_keyword(self, keyword: str) -> List[Tuple[str, str, Optional[float], str]]:
         """
         Метод для получения списка всех вакансий,
         в названии которых содержатся переданные в метод слова
@@ -94,28 +97,3 @@ class DBManager:
 
         self.cur.close()
         self.conn.close()
-
-
-# if __name__ == "__main__":
-#     db_manager = DBManager()
-# result = db_manager.get_companies_and_vacancies_count()
-# for company, count in result:
-#     print(f"{company}: {count} вакансий")
-#
-# result = db_manager.get_all_vacancies()
-# for company, vacancy, salary, link in result:
-#     print(f"{company}: {vacancy}, зарплата: {salary}, ссылка на вакансию: {link}")
-
-# result = db_manager.get_avg_salary()
-# for avg_salary in result:
-#     print(f"Средняя зарплата по вакансиям: {avg_salary} рублей")
-
-# result = db_manager.get_vacancies_with_higher_salary()
-# for company, vacancy, salary, link in result:
-#     print(f"{company}: {vacancy}, зарплата: {salary}, ссылка на вакансию: {link}")
-
-# result = db_manager.get_vacancies_with_keyword("OZON")
-# for company, vacancy, salary, link in result:
-#     print(f"{company}: {vacancy}, зарплата: {salary}, ссылка на вакансию: {link}")
-#
-# db_manager.close_db()

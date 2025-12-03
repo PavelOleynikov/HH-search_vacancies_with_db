@@ -1,20 +1,21 @@
 import psycopg2
 
+from config import host, password, user
 from src.hh_api import HeadHunterAPI
-from config import host, user, password
 
 
 def fill_tables(employer_ids: list[str]) -> None:
     """Функция заполнения таблицы данными о работодателях и их вакансиях"""
 
+    global cursor, connection
     hh_api = HeadHunterAPI()  # Создаем экземпляр класса HeadHunterAPI
 
     try:
-        conn = psycopg2.connect(host=host, user=user, password=password, database="hh_vacancies")
-        cur = conn.cursor()
+        connection = psycopg2.connect(host=host, user=user, password=password, database="hh_vacancies")
+        cursor = connection.cursor()
         # Очистка данных таблиц employers и vacancies со сбросом счетчика id
-        cur.execute("TRUNCATE TABLE employers, vacancies RESTART IDENTITY;")
-        conn.commit()
+        cursor.execute("TRUNCATE TABLE employers, vacancies RESTART IDENTITY;")
+        connection.commit()
 
         for employer_id in employer_ids:
             try:
@@ -25,14 +26,14 @@ def fill_tables(employer_ids: list[str]) -> None:
                     INSERT INTO employers (employer_id, employer_name)
                     VALUES (%s, %s) ON CONFLICT (employer_id) DO NOTHING; 
                 """
-                cur.execute(
+                cursor.execute(
                     insert_employer_query,
                     (
                         employer_id_value,
                         employer_data[0][1],
                     ),
                 )
-                conn.commit()
+                connection.commit()
 
                 insert_vacancy_query = """
                     INSERT INTO vacancies (name_vacancy, salary_from, salary_to, link, employer_id)
@@ -41,7 +42,7 @@ def fill_tables(employer_ids: list[str]) -> None:
 
                 for vacancy in employer_data:
 
-                    cur.execute(
+                    cursor.execute(
                         insert_vacancy_query,
                         (
                             vacancy[2],
@@ -55,13 +56,12 @@ def fill_tables(employer_ids: list[str]) -> None:
             except Exception as e:
                 print(f"Ошибка при обработке id работодателя {employer_id}: {e}")
 
-        conn.commit()
+        connection.commit()
         print("Таблицы успешно заполнены данными.")
 
     except Exception as e:
         print(f"Ошибка подключения к базе данных: {e}")
 
     finally:
-
-        cur.close()
-        conn.close()
+        cursor.close()
+        connection.close()
