@@ -14,7 +14,7 @@
 1. Клонируйте репозиторий:
 
 ```
-git clone https://github.com/PavelOleynikov/course_work3.git
+git clone https://github.com/PavelOleynikov/HH-search_vacancies_with_db.git
 ```
 
 2. Установите необходимые зависимости:
@@ -61,10 +61,9 @@ HeadHunterAPI
 
 методы:
 
-* _connect_to_api: приватный метод подключения к API HeadHunter
 * get_vacancies: метод получения списка вакансий по указанному id компании.
 
-connect_db
+Модуль - connect_db
 
 ```
 Модуль для подключения к БД и создания таблиц

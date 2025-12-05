@@ -1,17 +1,16 @@
 import psycopg2
 
-from config import host, password, user
+from config import dbname, host, password, user
 from src.hh_api import HeadHunterAPI
 
 
 def fill_tables(employer_ids: list[str]) -> None:
     """Функция заполнения таблицы данными о работодателях и их вакансиях"""
 
-    global cursor, connection
     hh_api = HeadHunterAPI()  # Создаем экземпляр класса HeadHunterAPI
 
     try:
-        connection = psycopg2.connect(host=host, user=user, password=password, database="hh_vacancies")
+        connection = psycopg2.connect(host=host, user=user, password=password, database=dbname)
         cursor = connection.cursor()
         # Очистка данных таблиц employers и vacancies со сбросом счетчика id
         cursor.execute("TRUNCATE TABLE employers, vacancies RESTART IDENTITY;")
@@ -24,7 +23,7 @@ def fill_tables(employer_ids: list[str]) -> None:
                 # Добавление данных в таблицу employers с игнорированием дубликатов
                 insert_employer_query = """
                     INSERT INTO employers (employer_id, employer_name)
-                    VALUES (%s, %s) ON CONFLICT (employer_id) DO NOTHING; 
+                    VALUES (%s, %s) ON CONFLICT (employer_id) DO NOTHING;
                 """
                 cursor.execute(
                     insert_employer_query,

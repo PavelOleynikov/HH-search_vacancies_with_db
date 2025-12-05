@@ -6,24 +6,24 @@ from config import dbname, host, password, user
 def create_database() -> None:
     """Функция для создания базы данных"""
 
-    # подключение к базе данных
+    # подключение к базе данных postgres
     conn = psycopg2.connect(host=host, user=user, password=password, database="postgres")
     conn.autocommit = True  # автоматическое подтверждение изменений
     cur = conn.cursor()  # открытие курсора
 
     try:
-        # Завершаем активные подключения
+        # Завершаем активные подключения к dbname
         cur.execute(
             f"""
-            SELECT pg_terminate_backend(pid) 
-            FROM pg_stat_activity 
+            SELECT pg_terminate_backend(pid)
+            FROM pg_stat_activity
             WHERE datname = '{dbname}' AND pid <> pg_backend_pid();
             """
         )
-        # Удаляем базу данных если она существует
+        # Удаляем базу данных dbname, если она существует
         cur.execute(f"DROP DATABASE IF EXISTS {dbname};")
 
-        # Создаем новую базу данных
+        # Создаем новую базу данных dbname
         cur.execute(f"CREATE DATABASE {dbname};")
         print(f"База данных '{dbname}' успешно создана.")
 

@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import psycopg2
 
@@ -50,7 +50,7 @@ class DBManager:
 
         # берет первое not null значение из salary_from и salary_to
         query = """
-        SELECT AVG(COALESCE(salary_from, salary_to)) AS avg_salary 
+        SELECT AVG(COALESCE(salary_from, salary_to)) AS avg_salary
         FROM vacancies;
         """
         self.cur.execute(query)
